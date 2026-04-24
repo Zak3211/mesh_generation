@@ -1,6 +1,17 @@
+import matplotlib
 import matplotlib.pyplot as plt
 import itertools
 import random
+
+# matplotlib.use("pgf")
+matplotlib.rcParams.update(
+    {
+        "pgf.texsystem": "pdflatex",
+        "font.family": "serif",
+        "text.usetex": True,
+        "pgf.rcfonts": False,
+    }
+)
 
 
 def edges_cross(ea, eb):
@@ -18,7 +29,9 @@ def edges_cross(ea, eb):
     return ccw(aa, ba, bb) != ccw(ab, ba, bb) and ccw(aa, ab, ba) != ccw(aa, ab, bb)
 
 
-n_vertices = 70
+n_vertices = 60
+
+random.seed(123456)
 
 x = random.sample(range(0, 101), n_vertices)
 y = random.sample(range(0, 101), n_vertices)
@@ -40,11 +53,16 @@ for candidate in edges_by_length:
 
 num_edges = len(actual_edges)
 
+plt.xticks([])
+plt.yticks([])
+
 # Plot with varying colours by length.
-cmap = plt.get_cmap("plasma")
+cmap = plt.get_cmap("PuRd")
 
 for i, (a, b) in enumerate(actual_edges):
     edge_color = cmap(i / num_edges)
     plt.plot([a[0], b[0]], [a[1], b[1]], color=edge_color, marker="o")
 
+fig = plt.gcf()
 plt.show()
+fig.savefig("/tmp/figure.pgf", backend="pgf")
