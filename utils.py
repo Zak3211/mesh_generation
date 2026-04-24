@@ -1,6 +1,6 @@
 import math
 
-def get_distance(n1, n2):
+def get_node_distance(n1, n2):
     """Calculates the euclidean distance between two nodes"""
 
     delta_x = n1.x - n2.x
@@ -33,4 +33,4 @@ class edge:
 
     def get_maginatude(self):
         """Returns the length of the edge"""
-        return get_distance(self.n1, self.n2)
+        return get_node_distance(self.n1, self.n2)
