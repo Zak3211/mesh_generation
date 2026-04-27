@@ -39,12 +39,9 @@ class edge:
         h = math.sqrt(3) / 2 * v.get_magnitude()
 
         return node(mx + h*px, my + h*py)
-
-    def get_reverse(self):
-        return edge(self.n2, self.n1)
     
     def intersects(self, other_edge):
-    # Setup points as vectors
+        # Setup points as vectors
         p = vector(self.n1.x, self.n1.y)
         q = vector(other_edge.n1.x, other_edge.n1.y)
         
@@ -76,6 +73,26 @@ class edge:
             return True
 
         return False
+
+    def get_integer_buckets(self):
+        """Gets the integer buckets of the bounding box of the edge"""
+        
+        x_dir = 1 if self.n2.x > self.n1.x else -1
+        y_dir =  1 if self.n2.y > self.n1.y else -1
+
+        buckets = []
+
+        start_x = math.floor(self.n1.x)
+        start_y = math.floor(self.n2.y)
+
+        final_x = math.ceil(self.n2.x)
+        final_y = math.ceil(self.n2.y)
+
+        for x in range(start_x, final_x+1, x_dir):
+            for y in range(start_y, final_y+1, y_dir):
+                buckets.append((x, y))
+        
+        return buckets
 
     def __lt__(self, other_edge):
         """Defines the < operator between two edges"""
