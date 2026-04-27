@@ -52,6 +52,7 @@ class advancing_front:
     def expand_mesh(self):
         """Expands the front inwards at the given edge""" 
 
+        print(len(self.edge_heap))
         # Check if there are any active meshes
         if not self.edge_heap:
             return
@@ -89,7 +90,49 @@ class advancing_front:
         # Adds the new edges to the mesh
         self.mesh.edge_set.add(new_edge1)
         self.mesh.edge_set.add(new_edge2)
+
+    def expand_until_closed(self):
+        """Recursively expands the front until no active edges remain."""
+        # 1. Base case: If the heap is empty, we are done
+        if not self.edge_heap:
+            print("Mesh closure achieved.")
+            return
+
+        # 2. Pop the shortest edge
+        curr_edge = heapq.heappop(self.edge_heap)
+
+        # 3. If this edge is no longer 'active', it means it was closed 
+        # from the other side. Skip and recurse.
+        if curr_edge not in self.active_edges:
+            return self.expand_until_closed()
+
+        # 4. Perform the expansion logic (the code we fixed in the last step)
+        self._perform_single_expansion(curr_edge)
+
+        # 5. Tail Recursion
+        return self.expand_until_closed()
     
+    def _perform_single_expansion(self, curr_edge):
+        """Expands a single edge into a triangle"""
+        self.active_edges.remove(curr_edge)
+
+        candidate_node = curr_edge.get_candidate_node()
+        best_node = self.find_nearest_node(candidate_node, tolerance=0.8)
+
+        if best_node == candidate_node:
+            self._add_node(best_node)
+
+        edge1 = edge(curr_edge.n1, best_node)
+        edge2 = edge(best_node, curr_edge.n2)
+
+        for e in [edge1, edge2]:
+            if e in self.active_edges:
+                self.active_edges.remove(e) 
+            else:
+                self.active_edges.add(e)
+                heapq.heappush(self.edge_heap, e)
+                self.mesh.edge_set.add(e)
+
     def _add_node(self, node):
         """Adds a new node to the data strucutre"""
         self.node_set.add(node)
