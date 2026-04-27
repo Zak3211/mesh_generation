@@ -3,9 +3,14 @@ import math
 class node:
     """Defines a point in R^2"""
 
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, precision = 4):
+        
+        # Number of decimal places to round to
+        self.precision = precision
+
+        # Node coordinates
+        self.x = round(x, self.precision)
+        self.y = round(y, self.precision)
 
     def get_coordinates(self):
         return (self.x, self.y)
@@ -27,6 +32,10 @@ class node:
     def __eq__(self, other_node):
         """Overrides the == operator"""
         return self.x == other_node.x and self.y == other_node.y
+
+    def __hash__(self):
+        """Makes the node hashable"""
+        return hash((self.x, self.y))
     
 
 class vector:
@@ -43,7 +52,7 @@ class vector:
         new_y = self.x*s_theta + self.y*c_theta
         self.x, self.y = new_x, new_y
     
-    def get_magnitutude(self):
+    def get_magnitude(self):
         return math.sqrt(self.x * self.x + self.y * self.y)
 
 class edge:
@@ -55,9 +64,12 @@ class edge:
     def get_coordinates(self):
         return self.n1.get_coordinates(), self.n2.get_coordinates()
 
+    def get_nodes(self):
+        return self.n1, self.n2
+    
     def get_length(self):
         """Returns the length of the edge"""
-        return (self.n2 - self.n1).get_magnitutude()
+        return (self.n2 - self.n1).get_magnitude()
     
     def get_candidate_node(self):
         """Gets the candidate node forming an equilateral triangle for this edge"""
