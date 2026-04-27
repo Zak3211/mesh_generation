@@ -13,6 +13,9 @@ class advancing_front:
         self.edge_heap = edges
         heapq.heapify(self.edge_heap)
 
+        # Tracking the active edges in the front
+        self.active_edges = set(edges)
+
         # Creating a hashset of active noes
         self.node_set = set()
         for edge in edges:
@@ -24,7 +27,8 @@ class advancing_front:
             int_coordinates = node.get_integer_coordinates()
             self.int_coords_to_nodes[int_coordinates].add(node)
 
-    def find_nearest_node(self, node, tolerance=0.5):
+    def find_nearest_node(self, node, tolerance=0.8):
+
         int_x, int_y = node.get_integer_coordinates()
         curr_node = node
         minimum_distance = tolerance
@@ -48,13 +52,23 @@ class advancing_front:
     def expand_mesh(self):
         """Expands the front inwards at the given edge""" 
 
+        # Check if there are any active meshes
+        if not self.edge_heap:
+            return
+        
         # Fetch the shortest edge
         curr_edge = heapq.heappop(self.edge_heap)
+
+        # Checks if the current edge is active
+        if curr_edge not in self.active_edges:
+            return self.expand_mesh()
+        self.active_edges.remove(curr_edge)
 
         # Fetch the node to expand to
         candidate_node = curr_edge.get_candidate_node()
         node = self.find_nearest_node(candidate_node)
-        self._add_node(node)
+        if node == candidate_node:
+            self._add_node(node)
 
         # Extracts the nodes
         node1 = curr_edge.n1
@@ -64,11 +78,13 @@ class advancing_front:
         new_edge1 = edge(node1, node)
         new_edge2 = edge(node, node2)
 
-        # Adds the new edges to the heap
-        if new_edge1 not in self.mesh.edge_set:
-            heapq.heappush(self.edge_heap, new_edge1)
-        if new_edge2 not in self.mesh.edge_set:
-            heapq.heappush(self.edge_heap, new_edge2)
+        for e in [new_edge1, new_edge2]:
+            if e in self.active_edges:
+                self.active_edges.remove(e)
+            else:
+                self.active_edges.add(e)
+                heapq.heappush(self.edge_heap, e)
+                self.mesh.edge_set.add(e)
         
         # Adds the new edges to the mesh
         self.mesh.edge_set.add(new_edge1)

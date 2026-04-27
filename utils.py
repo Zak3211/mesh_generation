@@ -1,5 +1,11 @@
 import math
 
+
+    
+# ---------------------------------------
+#             Node Class
+# ---------------------------------------
+
 class node:
     """Defines a point in R^2"""
 
@@ -21,8 +27,8 @@ class node:
     
     def __sub__(self, other_node):
         """Overrides the - operator, returns the vector other_node - self_node"""
-        x = other_node.x - self.x 
-        y = other_node.y - self.y 
+        x = self.x - other_node.x 
+        y = self.y - other_node.y
         return vector(x, y)
     
     def __add__(self, vector):
@@ -36,14 +42,22 @@ class node:
     def __hash__(self):
         """Makes the node hashable"""
         return hash((self.x, self.y))
+
+    def __str__(self):
+        return f"{(self.x, self.y)}"
     
+
+
+# ---------------------------------------
+#             Vector Class
+# ---------------------------------------
 
 class vector:
     """Defines a 2D vector"""
 
     def __init__(self, x, y):
-        self.x = x 
-        self.y = y 
+        self.x = x
+        self.y = y
 
     def rotate_counterclockwise(self, theta):
         s_theta = math.sin(theta) # sin(theta)
@@ -54,6 +68,15 @@ class vector:
     
     def get_magnitude(self):
         return math.sqrt(self.x * self.x + self.y * self.y)
+
+    def __str__(self):
+        return f"Vector: {(self.x, self.y)}"
+
+
+
+# ---------------------------------------
+#             Edge Class
+# ---------------------------------------
 
 class edge:
     
@@ -73,8 +96,7 @@ class edge:
     
     def get_candidate_node(self):
         """Gets the candidate node forming an equilateral triangle for this edge"""
-
-        edge_vector = self.n2 - self.n1
+        edge_vector = (self.n2 - self.n1)
         edge_vector.rotate_counterclockwise(theta=math.pi/3)
         candidate_node = self.n1 + edge_vector
         return candidate_node
@@ -84,10 +106,15 @@ class edge:
         return self.get_length() < other_edge.get_length()
 
     def __eq__(self, other_edge):
-        """Overrides the == operator"""
-        return self.n1 == other_edge.n1 and self.n2 == other_edge.n2
+        """Overrides the == operator, orientation invarariant"""
+        return (self.n1 == other_edge.n1 and self.n2 == other_edge.n2) or (self.n1 == other_edge.n2 and self.n2 == other_edge.n1)
 
     def __hash__(self):
         """Makes the edge object hashable"""
-        return hash(self.get_coordinates())
+        return hash(frozenset([self.n1, self.n2]))
 
+    def __str__(self):
+        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
+
+    def __repr__(self):
+        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
