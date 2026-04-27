@@ -1,6 +1,6 @@
-from utils import edge, get_node_distance
 from collections import defaultdict
 from mesh import mesh
+from utils import edge
 import heapq
 
 class advancing_front:
@@ -34,7 +34,7 @@ class advancing_front:
         """Returns the nearest node within distance tolerance, or node if none exist"""
         
         int_x, int_y = node.get_integer_coordinates()
-        curr_neighbors = self.int_coords_to_node[(x,y)]
+        curr_neighbors = self.int_coords_to_node[(int_x,int_y)]
         
         minimum_distance = tolerance
         curr_node = node
@@ -42,7 +42,7 @@ class advancing_front:
         for neighbor in curr_neighbors:
             distance = (node - neighbor).get_magnitutude()
 
-            if distnace < minimum_distance:
+            if distance < minimum_distance:
                 minimum_distance = distance
                 curr_node = neighbor
     
@@ -55,13 +55,17 @@ class advancing_front:
         node = self.find_nearest_node(candidate_node)
         self._add_node(node)
 
+        # Extracts the nodes
+        node1 = edge.n1
+        node2 = edge.n2
+
         # Creates the two new edges
-        new_edge1 = edge(n1, node)
-        new_edge2 = edge(node, n2)
+        new_edge1 = edge(node1, node)
+        new_edge2 = edge(node, node2)
 
         # Adds the new edges to the heap
         heapq.heappush(self.edge_heap, new_edge1)
-        heapq.heappush(self.edge_heap, new_edge1)
+        heapq.heappush(self.edge_heap, new_edge2)
     
     def _add_node(self, node):
         """Adds a new node to the data strucutre"""
@@ -70,7 +74,7 @@ class advancing_front:
         node_int_coordinates = node.get_integer_coordinates()
 
         self.node_set.delete(node_coordinates)
-        self.int_coords_to_node[int_coordinates].add(node)
+        self.int_coords_to_node[node_int_coordinates].add(node)
         self.coordinates_to_node = node_coordinates
 
     def _delete_node(self, node):
@@ -80,6 +84,6 @@ class advancing_front:
         node_int_coordinates = node.get_integer_coordinates()
 
         self.node_set.delete(node_coordinates)
-        self.int_coords_to_node[int_coordinates].delete(node)
+        self.int_coords_to_node[node_int_coordinates].delete(node)
         del self.coordinates_to_node[node_coordinates]
         

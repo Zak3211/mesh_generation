@@ -23,6 +23,10 @@ class node:
     def __add__(self, vector):
         """Returns a new node translate by the vector"""
         return node(self.x + vector.x, self.y + vector.y)
+
+    def __eq__(self, other_node):
+        """Overrides the == operator"""
+        return self.x == other_node.x and self.y == other_node.y
     
 
 class vector:
@@ -33,14 +37,11 @@ class vector:
         self.y = y 
 
     def rotate_counterclockwise(self, theta):
-
         s_theta = math.sin(theta) # sin(theta)
         c_theta = math.cos(theta) # cos(theta)
-
         new_x = self.x*c_theta - self.y*s_theta
         new_y = self.x*s_theta + self.y*c_theta
-
-        self.x, self.y = x, y
+        self.x, self.y = new_x, new_y
     
     def get_magnitutude(self):
         return math.sqrt(self.x * self.x + self.y * self.y)
@@ -69,3 +70,12 @@ class edge:
     def __lt__(self, other_edge):
         """Defines the < operator between two edges"""
         return self.get_length() < other_edge.get_length()
+
+    def __eq__(self, other_edge):
+        """Overrides the == operator"""
+        return self.n1 == other_edge.n1 and self.n2 == other_edge.n2
+
+    def __hash__(self):
+        """Makes the edge object hashable"""
+        return hash(self.get_coordinates())
+
