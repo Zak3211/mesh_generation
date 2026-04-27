@@ -1,7 +1,10 @@
 from collections import defaultdict
 from mesh import mesh
-from utils import edge
+from geometry_components.edge import edge
 import heapq
+
+def orient(a, b, c):
+    return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)
 
 class advancing_front:
     """Advancing front data structure containing the boundary and the generated mesh"""
@@ -27,7 +30,7 @@ class advancing_front:
             int_coordinates = node.get_integer_coordinates()
             self.int_coords_to_nodes[int_coordinates].add(node)
 
-    def find_nearest_node(self, node, tolerance=0.8):
+    def find_nearest_node(self, node, tolerance=0.2):
 
         int_x, int_y = node.get_integer_coordinates()
         curr_node = node
@@ -49,89 +52,71 @@ class advancing_front:
         
         return curr_node
 
+    def brute_force_intersection_check(self, curr_edge):
+        for other_edge in self.mesh.edge_set:
+            if curr_edge.intersects(other_edge):
+                return True
+        return False
+    
     def expand_mesh(self):
         """Expands the front inwards at the given edge""" 
 
-        print(len(self.edge_heap))
-        # Check if there are any active meshes
-        if not self.edge_heap:
-            return
+        for _ in range(1000):
+            if not self.edge_heap:
+                print("Mesh Closure Achieved")
+                return
         
-        # Fetch the shortest edge
-        curr_edge = heapq.heappop(self.edge_heap)
+            # Fetch the shortest edge
+            curr_edge = heapq.heappop(self.edge_heap)
 
-        # Checks if the current edge is active
-        if curr_edge not in self.active_edges:
-            return self.expand_mesh()
-        self.active_edges.remove(curr_edge)
+            # Checks if the current edge is active
+            if curr_edge not in self.active_edges:
+                continue
+            self.active_edges.remove(curr_edge)
 
-        # Fetch the node to expand to
-        candidate_node = curr_edge.get_candidate_node()
-        node = self.find_nearest_node(candidate_node)
-        if node == candidate_node:
-            self._add_node(node)
+            # Fetch the node to expand to
+            candidate_node = curr_edge.get_candidate_node()
+            node = self.find_nearest_node(candidate_node)
 
-        # Extracts the nodes
-        node1 = curr_edge.n1
-        node2 = curr_edge.n2
+            # Extracts the nodes
+            node1 = curr_edge.n1
+            node2 = curr_edge.n2
+            
+            # Checks orientation of triangle
+            if orient(node1, node2, node) <= 0:
+                print("Invalid Triangle Reached")
+                continue
 
-        # Creates the two new edges
-        new_edge1 = edge(node1, node)
-        new_edge2 = edge(node, node2)
+            # We have generated a flat triangle
+            if node == node1 or node == node2:
+                print("Flat Triangle Generated")
+                continue
+        
+            # Creates the two new edges
+            new_edge1 = edge(node1, node)
+            new_edge2 = edge(node, node2)
 
-        for e in [new_edge1, new_edge2]:
-            if e in self.active_edges:
-                self.active_edges.remove(e)
-            else:
+            if self.brute_force_intersection_check(new_edge1):
+                continue
+            if self.brute_force_intersection_check(new_edge2):
+                continue
+        
+            for e in [new_edge1, new_edge2]:
+                
+                # Triangle closure
+                if e in self.active_edges:
+                    self.active_edges.remove(e)
+                    continue
+                
                 self.active_edges.add(e)
                 heapq.heappush(self.edge_heap, e)
                 self.mesh.edge_set.add(e)
-        
-        # Adds the new edges to the mesh
-        self.mesh.edge_set.add(new_edge1)
-        self.mesh.edge_set.add(new_edge2)
 
-    def expand_until_closed(self):
-        """Recursively expands the front until no active edges remain."""
-        # 1. Base case: If the heap is empty, we are done
-        if not self.edge_heap:
-            print("Mesh closure achieved.")
-            return
+            if node == candidate_node:
+                self._add_node(node)
 
-        # 2. Pop the shortest edge
-        curr_edge = heapq.heappop(self.edge_heap)
+        print(f"Upper iteration limit achieved, edge_heap size: {len(self.edge_heap)}")
 
-        # 3. If this edge is no longer 'active', it means it was closed 
-        # from the other side. Skip and recurse.
-        if curr_edge not in self.active_edges:
-            return self.expand_until_closed()
-
-        # 4. Perform the expansion logic (the code we fixed in the last step)
-        self._perform_single_expansion(curr_edge)
-
-        # 5. Tail Recursion
-        return self.expand_until_closed()
-    
-    def _perform_single_expansion(self, curr_edge):
-        """Expands a single edge into a triangle"""
-        self.active_edges.remove(curr_edge)
-
-        candidate_node = curr_edge.get_candidate_node()
-        best_node = self.find_nearest_node(candidate_node, tolerance=0.8)
-
-        if best_node == candidate_node:
-            self._add_node(best_node)
-
-        edge1 = edge(curr_edge.n1, best_node)
-        edge2 = edge(best_node, curr_edge.n2)
-
-        for e in [edge1, edge2]:
-            if e in self.active_edges:
-                self.active_edges.remove(e) 
-            else:
-                self.active_edges.add(e)
-                heapq.heappush(self.edge_heap, e)
-                self.mesh.edge_set.add(e)
 
     def _add_node(self, node):
         """Adds a new node to the data strucutre"""

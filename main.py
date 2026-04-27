@@ -1,30 +1,43 @@
+from geometry_components.edge import edge
+from geometry_components.node import node
 from mesh import mesh
 from advancing_front import advancing_front
 
+def construct_boundary(coords_list):
+
+    node_list = []
+    for x, y in coords_list:
+        node_list.append(node(x, y))
+    
+    edge_list = []
+    for i in range(len(node_list)):
+        node1 = node_list[i-1]
+        node2 = node_list[i]
+
+        edge_list.append(edge(node1, node2))
+    
+    return edge_list
 def main():
 
     # 1. Setup the boundary
-    boundary_edges = mesh.generate_square_boundary()
+    boundary_edges = construct_boundary([
+        (0.804, 0.473),
+        (0.624, 0.765),
+        (0.279, 0.784),
+        (0.117, 0.596),
+        (0.192, 0.242),
+        (0.447, 0.213),
+        (0.699, 0.229)
+        ]
+    )
 
     # 2. Initialize the Advancing Front
     front = advancing_front(boundary_edges)
 
-    # 3. Expansion Loop
-    # For a square of 10x10, we might need ~100-150 triangles to fill it
-    # depending on your candidate node logic.
-    max_iterations = 290
-    for i in range(max_iterations):
-        if not front.edge_heap:
-            print("Front closed successfully!")
-            break
-        try:
-            front.expand_mesh()
-        except Exception as e:
-            print(f"Stopping expansion: {e}")
-            break
-
+    front.expand_mesh()
+    
     # 4. Plot the result
-    front.mesh.plot(title=f"Mesh after {i+1} iterations")
+    front.mesh.plot(title=f"Mesh after closure")
 
 if __name__ == "__main__":
     main()
