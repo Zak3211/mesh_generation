@@ -37,3 +37,17 @@ class edge:
     def get_maginatude(self):
         """Returns the length of the edge"""
         return get_distance(self.n1, self.n2)
+
+
+def edges_cross(ea, eb):
+    aa, ab = ea
+    ba, bb = eb
+
+    # If the edges share vertices, they are adjacent, but not "crossing".
+    if aa == ba or aa == bb or ab == ba or ab == bb:
+        return False
+
+    def ccw(p, q, r):
+        return (r[1] - p[1]) * (q[0] - p[0]) > (q[1] - p[1]) * (r[0] - p[0])
+
+    return ccw(aa, ba, bb) != ccw(ab, ba, bb) and ccw(aa, ab, ba) != ccw(aa, ab, bb)
