@@ -14,6 +14,15 @@ class vector:
         new_y = self.x*s_theta + self.y*c_theta
         self.x, self.y = new_x, new_y
     
+    def normalize(self):
+        magnitude = self.get_magnitude()
+        self.x /= magnitude
+        self.y /= magnitude
+
+    def cross(self, other):
+        """2D Cross Product (perp-dot product)"""
+        return self.x * other.y - self.y * other.x
+    
     def get_magnitude(self):
         return math.sqrt(self.x * self.x + self.y * self.y)
 
@@ -23,6 +32,6 @@ class vector:
     def __sub__(self, other):
         return vector(self.x - other.x, self.y - other.y)
 
-    def cross(self, other):
-        """2D Cross Product (perp-dot product)"""
-        return self.x * other.y - self.y * other.x
+    def __rmul__(self, scalar):
+        return vector(scalar*self.x, scalar*self.y)
+    

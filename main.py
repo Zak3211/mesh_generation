@@ -33,13 +33,15 @@ def main():
 
     #boundary_edges = mesh.generate_square_boundary()
 
+    #boundary_edges = mesh.generate_square_boundary()
+
     # 2. Initialize the Advancing Front
-    front = advancing_front(boundary_edges, tolerance=0.2)
+    front = advancing_front(boundary_edges, tolerance=0.5, iterations=1000)
 
     front.expand_mesh()
     
     # 4. Plot the result
-    front.mesh.plot(title=f"Mesh after closure")
+    #front.mesh.plot(title=f"Mesh after closure")
 
 if __name__ == "__main__":
     main()

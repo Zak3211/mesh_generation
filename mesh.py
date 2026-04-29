@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
+import matplotlib.pyplot as plt
 from geometry_components.node import node
 from geometry_components.edge import edge
 import math 
@@ -9,7 +10,74 @@ class mesh:
         self.edge_set = set()
         for edge in edge_list:
             self.edge_set.add(edge)
+        
+        self.lines = [e.get_coordinates() for e in self.edge_set]
+
+        self.setup_live_plot()
     
+    def get_bounding_box(self):
+        """Returns (x_min, y_min, x_max, y_max)"""
+
+        x_min = float('inf')
+        x_max = float('-inf')
+        y_min = float('inf')
+        y_max = float('-inf')
+
+        for edge in self.edge_set:
+            n1, n2 = edge.get_nodes()
+            x1, y1 = n1.get_coordinates()
+            x2, y2 = n2.get_coordinates()
+
+            x_min = min([x1, x2, x_min])
+            x_max = max([x1, x2, x_max])
+            y_min = min([y1, y2, y_min])
+            y_max = max([y1, y2, y_max])
+        
+        return (x_min, y_min, x_max, y_max)
+    
+    def add_edge(self, edge):
+        self.edge_set.add(edge)
+        self.lines.append(edge.get_coordinates())
+
+        self.lc.set_segments(self.lines)
+        plt.draw()
+        plt.pause(0.01)
+
+    def setup_live_plot(self):
+        plt.ion()
+        self.fig, self.ax = plt.subplots(figsize=(8, 8))
+        self.lc = LineCollection([], colors='blue', linewidths=1)
+        self.ax.add_collection(self.lc)
+
+        # Sets the plot bounds
+        x_min, y_min, x_max, y_max = self.get_bounding_box()
+        self.ax.set_xlim(x_min - 5, x_max + 5)
+        self.ax.set_ylim(y_min - 5, y_max + 5)
+
+        self.ax.set_aspect('equal')
+
+    def plot(self, title="Mesh Visualization"):
+        fig, ax = plt.subplots(figsize=(8, 8))
+        
+        # Prepare the line segments for fast plotting
+        lines = []
+        for e in self.edge_set:
+            (x1, y1), (x2, y2) = e.get_coordinates()
+            lines.append([(x1, y1), (x2, y2)])
+
+        lc = LineCollection(lines, colors='blue', linewidths=1)
+        ax.add_collection(lc)
+        
+        ax.autoscale()
+        ax.set_aspect('equal')
+        plt.title(title)
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.grid(True, linestyle='--', alpha=0.6)
+        plt.show()
+
+    """Boundary generation methods"""
+
     @staticmethod
     def generate_square_boundary(side_length=10, points_per_side=11):
         """
@@ -73,6 +141,7 @@ class mesh:
             edges.append(edge(n_curr, n_next))
         
         return edges
+    
     @staticmethod
     def generate_triangle_boundary(side_length=10, points_per_side=10):
         """
@@ -143,27 +212,4 @@ class mesh:
             edges.append(edge(n_curr, n_next))
         
         return edges
-    def plot(self, title="Mesh Visualization"):
-        """
-        Plots the current edges in the mesh.
-        
-        This method is AI generated (Gemini)
-        """
-        fig, ax = plt.subplots(figsize=(8, 8))
-        
-        # Prepare the line segments for fast plotting
-        lines = []
-        for e in self.edge_set:
-            (x1, y1), (x2, y2) = e.get_coordinates()
-            lines.append([(x1, y1), (x2, y2)])
 
-        lc = LineCollection(lines, colors='blue', linewidths=1)
-        ax.add_collection(lc)
-        
-        ax.autoscale()
-        ax.set_aspect('equal')
-        plt.title(title)
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.grid(True, linestyle='--', alpha=0.6)
-        plt.show()

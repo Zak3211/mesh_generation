@@ -2,17 +2,37 @@ from collections import defaultdict
 from mesh import mesh
 from geometry_components.edge import edge
 import heapq
+from collections import deque
+import matplotlib.pyplot as plt
+
+class edge_storage:
+    def __init__(self, edges = []):
+        self.q = deque()
+        for edge in edges:
+            self.add_edge(edge)
+
+    def add_edge(self, edge):
+        self.q.append(edge)
+
+    def get_edge(self):
+        return self.q.popleft()
+    
+    def __bool__(self):
+        return len(self.q) != 0
+
+    def __len__(self):
+        return len(self.q)
 
 class advancing_front:
     """Advancing front data structure containing the boundary and the generated mesh"""
 
-    def __init__(self, edges : list[edge], tolerance = 0.2):
+    def __init__(self, edges : list[edge], tolerance = 0.2, iterations = 1000):
         
+        # Global object variables
         self.mesh = mesh(edges)
         self.tolerance = tolerance
-
-        self.edge_heap = edges
-        heapq.heapify(self.edge_heap)
+        self.iterations = iterations
+        self.edge_heap = edge_storage(edges=edges)
 
         # Tracking the active edges in the front
         self.active_edges = set(edges)
@@ -116,13 +136,13 @@ class advancing_front:
     def expand_mesh(self):
         """Expands the front inwards at the given edge""" 
 
-        for _ in range(1000):
+        for _ in range(self.iterations):
             if not self.edge_heap:
                 print("Mesh Closure Achieved")
                 return
         
             # Fetch the shortest edge
-            curr_edge = heapq.heappop(self.edge_heap)
+            curr_edge = self.edge_heap.get_edge()
 
             # Checks if the current edge is active
             if curr_edge not in self.active_edges:
@@ -141,6 +161,9 @@ class advancing_front:
                 self.expand_mesh_with_node(curr_edge, nearest_neighbor)
 
         print(f"Upper iteration limit achieved, edge_heap size: {len(self.edge_heap)}")
+        
+        plt.ioff()
+        plt.show()
 
     def _add_edge(self, new_edge):
         
@@ -148,8 +171,8 @@ class advancing_front:
             return self.active_edges.remove(new_edge)
 
         self.active_edges.add(new_edge)
-        heapq.heappush(self.edge_heap, new_edge)
-        self.mesh.edge_set.add(new_edge)
+        self.edge_heap.add_edge(new_edge)
+        self.mesh.add_edge(new_edge)
 
         integer_coordinates = new_edge.get_integer_buckets()
         for x, y in integer_coordinates:

@@ -4,9 +4,11 @@ import math
 import random
 
 class edge:
-    def __init__(self, n1 : node, n2 : node):
+    def __init__(self, n1 : node, n2 : node, stochasticity = 0):
         self.n1 = n1
         self.n2 = n2
+
+        self.stochasticity = stochasticity
     
     def get_coordinates(self):
         return self.n1.get_coordinates(), self.n2.get_coordinates()
@@ -18,28 +20,74 @@ class edge:
         """Returns the length of the edge"""
         return (self.n2 - self.n1).get_magnitude()
     
+    def get_midpoint(self):
+        x = (self.n1.x + self.n2.x) / 2
+        y = (self.n1.y + self.n2.y) / 2
+        return node(x, y)
+    
     def get_candidate_node(self):
         """Gets the candidate node forming an equilateral triangle for this edge"""
+
         v = self.n2 - self.n1
 
-        # midpoint
-        mx = (self.n1.x + self.n2.x) / 2
-        my = (self.n1.y + self.n2.y) / 2
+        # Midpoint of the vector
+        midpoint = self.get_midpoint()
 
-        # perpendicular (LEFT normal)
-        px = -v.y
-        py = v.x
+        # Normal perpendicular vecotr
+        perp = vector(-v.y, v.x)
+        perp.normalize()
 
-        # normalize
-        length = math.sqrt(px*px + py*py)
-        px /= length
-        py /= length
-
-        # height of equilateral triangle
+        # Height of equilateral triangle
         h = math.sqrt(3) / 2 * v.get_magnitude()
 
-        return node(mx + h*px, my + h*py)
+        return midpoint + h*perp
+
+    def get_integer_buckets(self):
+        """Gets the integer buckets of the bounding box of the edge"""
+        
+        # Gets the bounding box of the edge
+        min_x = min(self.n1.x, self.n2.x)
+        max_x = max(self.n1.x, self.n2.x)
+        min_y = min(self.n1.y, self.n2.y)
+        max_y = max(self.n1.y, self.n2.y)
+
+        # Declaring loop boundaries
+        start_x = math.floor(min_x)
+        end_x = math.floor(max_x)
+        start_y = math.floor(min_y)
+        end_y = math.floor(max_y)
+        
+        # Populating the buckets
+        buckets = []
+        for x in range(start_x, end_x + 1):
+            for y in range(start_y, end_y + 1):
+                buckets.append((x, y))
+                
+        return buckets
     
+    def __lt__(self, other_edge):
+        """Defines the < operator between two edges"""
+        return random.uniform(1, 1 + self.stochasticity)*self.get_length() < other_edge.get_length()
+
+    def __eq__(self, other_edge):
+        """Overrides the == operator, orientation invarariant"""
+        if not isinstance(other_edge, edge):
+            return False
+        return  (self.n1 == other_edge.n1 and self.n2 == other_edge.n2) or \
+                (self.n1 == other_edge.n2 and self.n2 == other_edge.n1)
+
+    def __hash__(self):
+        """Makes the edge object hashable"""
+        return hash(frozenset([self.n1, self.n2]))
+
+    def __str__(self):
+        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
+
+    def __repr__(self):
+        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
+    
+    """AI Generated Code Below"""
+
     def intersects(self, other_edge):
         # Setup points as vectors
         p = vector(self.n1.x, self.n1.y)
@@ -73,47 +121,3 @@ class edge:
             return True
 
         return False
-
-    def get_integer_buckets(self):
-        """Gets the integer buckets of the bounding box of the edge"""
-        
-        # Gets the bounding box of the edge
-        min_x = min(self.n1.x, self.n2.x)
-        max_x = max(self.n1.x, self.n2.x)
-        min_y = min(self.n1.y, self.n2.y)
-        max_y = max(self.n1.y, self.n2.y)
-
-        # Declaring loop boundaries
-        start_x = math.floor(min_x)
-        end_x = math.floor(max_x)
-        start_y = math.floor(min_y)
-        end_y = math.floor(max_y)
-        
-        # Populating the buckets
-        buckets = []
-        for x in range(start_x, end_x + 1):
-            for y in range(start_y, end_y + 1):
-                buckets.append((x, y))
-                
-        return buckets
-    
-    def __lt__(self, other_edge):
-        """Defines the < operator between two edges"""
-        return random.uniform(1, 1.2)*self.get_length() < other_edge.get_length()
-
-    def __eq__(self, other_edge):
-        """Overrides the == operator, orientation invarariant"""
-        if not isinstance(other_edge, edge):
-            return False
-        return  (self.n1 == other_edge.n1 and self.n2 == other_edge.n2) or \
-                (self.n1 == other_edge.n2 and self.n2 == other_edge.n1)
-
-    def __hash__(self):
-        """Makes the edge object hashable"""
-        return hash(frozenset([self.n1, self.n2]))
-
-    def __str__(self):
-        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
-
-    def __repr__(self):
-        return f"{self.n1.get_coordinates()} -> {self.n2.get_coordinates()}"
