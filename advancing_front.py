@@ -3,15 +3,13 @@ from mesh import mesh
 from geometry_components.edge import edge
 import heapq
 
-def orient(a, b, c):
-    return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)
-
 class advancing_front:
     """Advancing front data structure containing the boundary and the generated mesh"""
 
-    def __init__(self, edges : list[edge]):
+    def __init__(self, edges : list[edge], tolerance = 0.2):
         
         self.mesh = mesh(edges)
+        self.tolerance = tolerance
 
         self.edge_heap = edges
         heapq.heapify(self.edge_heap)
@@ -30,11 +28,18 @@ class advancing_front:
             int_coordinates = node.get_integer_coordinates()
             self.int_coords_to_nodes[int_coordinates].add(node)
 
-    def find_nearest_node(self, node, tolerance=0.2):
+        # Int coordinates to set of edges
+        self.int_coords_to_edges = defaultdict(set)
+        for curr_edge in edges:
+            int_coordinates_list = curr_edge.get_integer_buckets()
+            for x, y in int_coordinates_list:
+                self.int_coords_to_edges[x, y].add(curr_edge)
 
+    def find_nearest_node(self, node):
+        """Returns the nearest neighbor such that (node->neighbor) does not exist in the mesh"""
         int_x, int_y = node.get_integer_coordinates()
         curr_node = node
-        minimum_distance = tolerance
+        minimum_distance = float('inf')
 
         # Gets all neighbors in the 3x3 grid
         neighbors = set()
@@ -45,6 +50,11 @@ class advancing_front:
         
         # Finds the closest neighbor within the tolerance
         for neighbor in neighbors:
+
+            # Checking if node->neighbor exists
+            if edge(node, neighbor) in self.mesh.edge_set:
+                continue
+
             distance = (node - neighbor).get_magnitude()
             if distance < minimum_distance:
                 minimum_distance = distance
@@ -52,12 +62,57 @@ class advancing_front:
         
         return curr_node
 
-    def brute_force_intersection_check(self, curr_edge):
-        for other_edge in self.mesh.edge_set:
-            if curr_edge.intersects(other_edge):
-                return True
+    def bucketted_intersection_check(self, curr_edge):
+        for x, y in curr_edge.get_integer_buckets():
+            for other_edge in self.int_coords_to_edges[x, y]:
+                if other_edge == curr_edge:
+                    continue
+                if curr_edge.intersects(other_edge):
+                    return True
         return False
     
+    def check_triangle_quality(self, node1, node2, node3):
+        """Ensures generated triangles are of adequate quality"""
+
+        def orient(a, b, c):
+            """Helper function to check the orientation of a triangle"""
+            return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)
+        
+        if orient(node1, node2, node3) <= 0:
+            return False
+        if node1 == node3 or node3 == node2:
+            return False
+        return True
+
+    def expand_mesh_with_node(self, curr_edge, candidate_node):
+        """Expands curr_edge using candidate_node, returns True if succesful and False otherwise"""
+        
+        node1 = curr_edge.n1
+        node2 = curr_edge.n2
+
+        if not self.check_triangle_quality(node1, node2, candidate_node):
+            return False
+
+        # Creates the two new candidate edges
+        new_edge1 = edge(node1, candidate_node)
+        new_edge2 = edge(candidate_node, node2)
+
+        # Checking for intersections
+        if self.bucketted_intersection_check(new_edge1):
+            return False
+        if self.bucketted_intersection_check(new_edge2):
+            return False
+
+        # Addings the edges
+        self._add_edge(new_edge1)
+        self._add_edge(new_edge2)
+
+        # Adding the node
+        self._add_node(candidate_node)
+
+        return True
+
+
     def expand_mesh(self):
         """Expands the front inwards at the given edge""" 
 
@@ -76,47 +131,29 @@ class advancing_front:
 
             # Fetch the node to expand to
             candidate_node = curr_edge.get_candidate_node()
-            node = self.find_nearest_node(candidate_node)
-
-            # Extracts the nodes
-            node1 = curr_edge.n1
-            node2 = curr_edge.n2
+            nearest_neighbor = self.find_nearest_node(candidate_node)
             
-            # Checks orientation of triangle
-            if orient(node1, node2, node) <= 0:
-                print("Invalid Triangle Reached")
+            if (candidate_node - nearest_neighbor).get_magnitude() < self.tolerance:
+                self.expand_mesh_with_node(curr_edge, nearest_neighbor)
                 continue
 
-            # We have generated a flat triangle
-            if node == node1 or node == node2:
-                print("Flat Triangle Generated")
-                continue
-        
-            # Creates the two new edges
-            new_edge1 = edge(node1, node)
-            new_edge2 = edge(node, node2)
-
-            if self.brute_force_intersection_check(new_edge1):
-                continue
-            if self.brute_force_intersection_check(new_edge2):
-                continue
-        
-            for e in [new_edge1, new_edge2]:
-                
-                # Triangle closure
-                if e in self.active_edges:
-                    self.active_edges.remove(e)
-                    continue
-                
-                self.active_edges.add(e)
-                heapq.heappush(self.edge_heap, e)
-                self.mesh.edge_set.add(e)
-
-            if node == candidate_node:
-                self._add_node(node)
+            if not self.expand_mesh_with_node(curr_edge, candidate_node):
+                self.expand_mesh_with_node(curr_edge, nearest_neighbor)
 
         print(f"Upper iteration limit achieved, edge_heap size: {len(self.edge_heap)}")
 
+    def _add_edge(self, new_edge):
+        
+        if new_edge in self.active_edges:
+            return self.active_edges.remove(new_edge)
+
+        self.active_edges.add(new_edge)
+        heapq.heappush(self.edge_heap, new_edge)
+        self.mesh.edge_set.add(new_edge)
+
+        integer_coordinates = new_edge.get_integer_buckets()
+        for x, y in integer_coordinates:
+            self.int_coords_to_edges[x, y].add(new_edge)
 
     def _add_node(self, node):
         """Adds a new node to the data strucutre"""

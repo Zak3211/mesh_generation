@@ -77,23 +77,26 @@ class edge:
     def get_integer_buckets(self):
         """Gets the integer buckets of the bounding box of the edge"""
         
-        x_dir = 1 if self.n2.x > self.n1.x else -1
-        y_dir =  1 if self.n2.y > self.n1.y else -1
+        # Gets the bounding box of the edge
+        min_x = min(self.n1.x, self.n2.x)
+        max_x = max(self.n1.x, self.n2.x)
+        min_y = min(self.n1.y, self.n2.y)
+        max_y = max(self.n1.y, self.n2.y)
 
-        buckets = []
-
-        start_x = math.floor(self.n1.x)
-        start_y = math.floor(self.n2.y)
-
-        final_x = math.ceil(self.n2.x)
-        final_y = math.ceil(self.n2.y)
-
-        for x in range(start_x, final_x+1, x_dir):
-            for y in range(start_y, final_y+1, y_dir):
-                buckets.append((x, y))
+        # Declaring loop boundaries
+        start_x = math.floor(min_x)
+        end_x = math.floor(max_x)
+        start_y = math.floor(min_y)
+        end_y = math.floor(max_y)
         
+        # Populating the buckets
+        buckets = []
+        for x in range(start_x, end_x + 1):
+            for y in range(start_y, end_y + 1):
+                buckets.append((x, y))
+                
         return buckets
-
+    
     def __lt__(self, other_edge):
         """Defines the < operator between two edges"""
         return random.uniform(1, 1.2)*self.get_length() < other_edge.get_length()

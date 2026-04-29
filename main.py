@@ -31,8 +31,10 @@ def main():
         ]
     )
 
+    #boundary_edges = mesh.generate_square_boundary()
+
     # 2. Initialize the Advancing Front
-    front = advancing_front(boundary_edges)
+    front = advancing_front(boundary_edges, tolerance=0.2)
 
     front.expand_mesh()
     
