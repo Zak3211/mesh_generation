@@ -1,5 +1,6 @@
 import math
 
+
 def get_distance(n1, n2):
     """Calculates the euclidean distance between two nodes"""
 
@@ -10,6 +11,7 @@ def get_distance(n1, n2):
     delta_y *= delta_y
 
     return math.sqrt(delta_x + delta_y)
+
 
 class node:
     def __init__(self, x, y):
@@ -22,12 +24,13 @@ class node:
     def get_integer_coordinates(self):
         """Returns the coordinates as integers"""
         return (int(self.x), int(self.y))
-    
+
+
 class edge:
-    def __init__(self, n1 : node, n2 : node):
+    def __init__(self, n1: node, n2: node):
         self.n1 = n1
         self.n2 = n2
-    
+
     def get_coordinates(self):
         return self.n1.get_coordinates(), self.n2.get_coordinates()
 
