@@ -26,10 +26,10 @@ class edge_storage:
 class advancing_front:
     """Advancing front data structure containing the boundary and the generated mesh"""
 
-    def __init__(self, edges : list[edge], tolerance = 0.2, iterations = 1000):
+    def __init__(self, edges : list[edge], tolerance = 0.2, iterations = 1000, is_animated=False):
         
         # Global object variables
-        self.mesh = mesh(edges)
+        self.mesh = mesh(edges, is_animated)
         self.tolerance = tolerance
         self.iterations = iterations
         self.edge_heap = edge_storage(edges=edges)

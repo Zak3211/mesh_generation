@@ -3,7 +3,7 @@ from geometry_components.vector import vector
 class node:
     """Defines a point in R^2"""
 
-    def __init__(self, x, y, precision = 10):
+    def __init__(self, x, y, precision = 3):
         
         # Number of decimal places to round to
         self.precision = precision

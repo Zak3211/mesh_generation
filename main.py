@@ -17,6 +17,7 @@ def construct_boundary(coords_list):
         edge_list.append(edge(node1, node2))
     
     return edge_list
+
 def main():
 
     # 1. Setup the boundary
@@ -31,17 +32,14 @@ def main():
         ]
     )
 
-    #boundary_edges = mesh.generate_square_boundary()
-
-    #boundary_edges = mesh.generate_square_boundary()
+    boundary_edges = mesh.generate_square_boundary()
 
     # 2. Initialize the Advancing Front
-    front = advancing_front(boundary_edges, tolerance=0.5, iterations=1000)
-
+    front = advancing_front(boundary_edges, tolerance=0.4, iterations=0, is_animated=False)
     front.expand_mesh()
     
     # 4. Plot the result
-    #front.mesh.plot(title=f"Mesh after closure")
+    front.mesh.plot(save=True, title="N=0 Iterations")
 
 if __name__ == "__main__":
     main()

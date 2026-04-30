@@ -34,7 +34,7 @@ class edge:
         midpoint = self.get_midpoint()
 
         # Normal perpendicular vecotr
-        perp = vector(-v.y, v.x)
+        perp = v.get_perpindicular()
         perp.normalize()
 
         # Height of equilateral triangle

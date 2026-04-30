@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 from matplotlib.collections import LineCollection
 import matplotlib.pyplot as plt
 from geometry_components.node import node
@@ -6,14 +7,16 @@ from geometry_components.edge import edge
 import math 
 
 class mesh:
-    def __init__(self, edge_list):
+    def __init__(self, edge_list, is_animated = False):
         self.edge_set = set()
         for edge in edge_list:
             self.edge_set.add(edge)
         
         self.lines = [e.get_coordinates() for e in self.edge_set]
 
-        self.setup_live_plot()
+        self.is_animated = is_animated
+        if self.is_animated:
+            self.setup_live_plot()
     
     def get_bounding_box(self):
         """Returns (x_min, y_min, x_max, y_max)"""
@@ -39,9 +42,10 @@ class mesh:
         self.edge_set.add(edge)
         self.lines.append(edge.get_coordinates())
 
-        self.lc.set_segments(self.lines)
-        plt.draw()
-        plt.pause(0.01)
+        if self.is_animated:
+            self.lc.set_segments(self.lines)
+            plt.draw()
+            plt.pause(0.01)
 
     def setup_live_plot(self):
         plt.ion()
@@ -56,7 +60,18 @@ class mesh:
 
         self.ax.set_aspect('equal')
 
-    def plot(self, title="Mesh Visualization"):
+    def plot(self, save=False, title="plot"):
+        
+        if save:
+            # Setting up pgf save logic
+            mpl.use("pgf")
+            mpl.rcParams.update({
+                "pgf.texsystem": "pdflatex", # or "xelatex" / "lualatex"
+                "font.family": "serif",       # match your document font
+                "text.usetex": True,          # use LaTeX to write all text
+                "pgf.rcfonts": False,         # don't use Matplotlib's fonts
+            })
+
         fig, ax = plt.subplots(figsize=(8, 8))
         
         # Prepare the line segments for fast plotting
@@ -76,6 +91,9 @@ class mesh:
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.show()
 
+        if save:
+            plt.savefig(f"{title}.pgf")
+    
     """Boundary generation methods"""
 
     @staticmethod

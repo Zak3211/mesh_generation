@@ -26,6 +26,9 @@ class vector:
     def get_magnitude(self):
         return math.sqrt(self.x * self.x + self.y * self.y)
 
+    def get_perpindicular(self):
+        return vector(-self.y, self.x)
+    
     def __str__(self):
         return f"Vector: {(self.x, self.y)}"
     
