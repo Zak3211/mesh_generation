@@ -73,22 +73,18 @@ class mesh:
             })
 
         fig, ax = plt.subplots(figsize=(8, 8))
-        
-        # Prepare the line segments for fast plotting
-        lines = []
-        for e in self.edge_set:
-            (x1, y1), (x2, y2) = e.get_coordinates()
-            lines.append([(x1, y1), (x2, y2)])
 
-        lc = LineCollection(lines, colors='blue', linewidths=1)
+        lc = LineCollection(self.lines, colors='blue', linewidths=1)
         ax.add_collection(lc)
         
         ax.autoscale()
         ax.set_aspect('equal')
-        plt.title(title)
-        plt.xlabel("X")
-        plt.ylabel("Y")
-        plt.grid(True, linestyle='--', alpha=0.6)
+
+        lc.set_color('black')
+        #lc.set_linewidth(0.5)
+
+        ax.axis("off")
+        #plt.title(title)
         plt.show()
 
         if save:

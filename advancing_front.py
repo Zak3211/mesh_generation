@@ -83,21 +83,19 @@ class advancing_front:
         return curr_node
 
     def bucketted_intersection_check(self, curr_edge):
+        #if curr_edge in self.mesh.edge_set:
+        #   return True
         for x, y in curr_edge.get_integer_buckets():
             for other_edge in self.int_coords_to_edges[x, y]:
-                if other_edge == curr_edge:
-                    continue
                 if curr_edge.intersects(other_edge):
                     return True
         return False
     
     def check_triangle_quality(self, node1, node2, node3):
         """Ensures generated triangles are of adequate quality"""
-
         def orient(a, b, c):
             """Helper function to check the orientation of a triangle"""
             return (b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)
-        
         if orient(node1, node2, node3) <= 0:
             return False
         if node1 == node3 or node3 == node2:
@@ -153,11 +151,15 @@ class advancing_front:
             candidate_node = curr_edge.get_candidate_node()
             nearest_neighbor = self.find_nearest_node(candidate_node)
             
+            # Latch onto neighbor if within tolerance
             if (candidate_node - nearest_neighbor).get_magnitude() < self.tolerance:
                 self.expand_mesh_with_node(curr_edge, nearest_neighbor)
                 continue
-
+            
+            # Try the current node
             if not self.expand_mesh_with_node(curr_edge, candidate_node):
+
+                # Latch onto neighbor if current node fails
                 self.expand_mesh_with_node(curr_edge, nearest_neighbor)
 
         print(f"Upper iteration limit achieved, edge_heap size: {len(self.edge_heap)}")

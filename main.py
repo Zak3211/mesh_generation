@@ -32,14 +32,18 @@ def main():
         ]
     )
 
-    boundary_edges = mesh.generate_square_boundary()
+    boundary_edges = mesh.generate_circle_boundary()
+
+    animate = False
+    save = True
 
     # 2. Initialize the Advancing Front
-    front = advancing_front(boundary_edges, tolerance=0.4, iterations=0, is_animated=False)
+    front = advancing_front(boundary_edges, tolerance=0.2, iterations=1000, is_animated=animate)
     front.expand_mesh()
     
     # 4. Plot the result
-    front.mesh.plot(save=True, title="N=0 Iterations")
+    if not animate:
+        front.mesh.plot(save=save, title="circle_mesh_ugly")
 
 if __name__ == "__main__":
     main()
