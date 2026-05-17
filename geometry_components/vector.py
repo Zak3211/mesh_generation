@@ -16,8 +16,11 @@ class vector:
     
     def normalize(self):
         magnitude = self.get_magnitude()
+        if magnitude == 0:
+            return False
         self.x /= magnitude
         self.y /= magnitude
+        return True
 
     def cross(self, other):
         """2D Cross Product (perp-dot product)"""

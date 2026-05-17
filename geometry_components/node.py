@@ -29,9 +29,10 @@ class node:
         """Returns a new node translate by the vector"""
         return node(self.x + vector.x, self.y + vector.y)
 
-    def __eq__(self, other_node):
+    def __eq__(self, other_node, tolerance = 0.1):
         """Overrides the == operator"""
-        return self.x == other_node.x and self.y == other_node.y
+        return abs(self.x-other_node.x) <= tolerance and \
+                abs(self.y-other_node.y) <= tolerance
 
     def __hash__(self):
         """Makes the node hashable"""

@@ -6,15 +6,18 @@ from collections import deque
 import matplotlib.pyplot as plt
 
 class edge_storage:
-    def __init__(self, edges = []):
+    def __init__(self, edges = None):
         self.q = deque()
-        for edge in edges:
-            self.add_edge(edge)
+        if edges is not None:
+            for edge in edges:
+                self.add_edge(edge)
 
     def add_edge(self, edge):
+        #heapq.heappush(self.q, edge)
         self.q.append(edge)
 
     def get_edge(self):
+        #return heapq.heappop(self.q)
         return self.q.popleft()
     
     def __bool__(self):
@@ -55,7 +58,9 @@ class advancing_front:
             for x, y in int_coordinates_list:
                 self.int_coords_to_edges[x, y].add(curr_edge)
 
-    def find_nearest_node(self, node):
+        self.expanded_edges = set()
+
+    def find_nearest_node(self, curr_edge, node):
         """Returns the nearest neighbor such that (node->neighbor) does not exist in the mesh"""
         int_x, int_y = node.get_integer_coordinates()
         curr_node = node
@@ -63,16 +68,16 @@ class advancing_front:
 
         # Gets all neighbors in the 3x3 grid
         neighbors = set()
-        for dx in [-1, 0, 1]:
-            for dy in [-1, 0, 1]:
+        for dx in [-2, -1, 0, 1, 2]:
+            for dy in [-2, -1, 0, 1, 2]:
                 new_neighbors = self.int_coords_to_nodes[(int_x + dx, int_y + dy)]
                 neighbors.update(new_neighbors)
         
         # Finds the closest neighbor within the tolerance
         for neighbor in neighbors:
-
-            # Checking if node->neighbor exists
-            if edge(node, neighbor) in self.mesh.edge_set:
+            
+            # Checking if this neighbor forms a valid pairing
+            if not self.check_new_edge_validity(curr_edge, neighbor):
                 continue
 
             distance = (node - neighbor).get_magnitude()
@@ -102,24 +107,39 @@ class advancing_front:
             return False
         return True
 
-    def expand_mesh_with_node(self, curr_edge, candidate_node):
-        """Expands curr_edge using candidate_node, returns True if succesful and False otherwise"""
-        
+    def check_new_edge_validity(self, curr_edge, candidate_node):
         node1 = curr_edge.n1
         node2 = curr_edge.n2
-
-        if not self.check_triangle_quality(node1, node2, candidate_node):
-            return False
 
         # Creates the two new candidate edges
         new_edge1 = edge(node1, candidate_node)
         new_edge2 = edge(candidate_node, node2)
 
+        # Checking triangle quality
+        if not self.check_triangle_quality(node1, node2, candidate_node):
+            return False
+        
         # Checking for intersections
         if self.bucketted_intersection_check(new_edge1):
             return False
         if self.bucketted_intersection_check(new_edge2):
             return False
+
+        return True
+    
+    def expand_mesh_with_node(self, curr_edge, candidate_node):
+        """Expands curr_edge using candidate_node, returns True if succesful and False otherwise"""
+        
+        if not self.check_new_edge_validity(curr_edge, candidate_node):
+            return False
+        
+        # Extracting the nodes
+        node1 = curr_edge.n1
+        node2 = curr_edge.n2
+
+        # Creates the two new candidate edges
+        new_edge1 = edge(node1, candidate_node)
+        new_edge2 = edge(candidate_node, node2)
 
         # Addings the edges
         self._add_edge(new_edge1)
@@ -139,8 +159,11 @@ class advancing_front:
                 print("Mesh Closure Achieved")
                 return
         
-            # Fetch the shortest edge
+            # Fetch the shortest edge and checks if we've visited it
             curr_edge = self.edge_heap.get_edge()
+            if curr_edge in self.expanded_edges:
+                continue
+            self.expanded_edges.add(curr_edge)
 
             # Checks if the current edge is active
             if curr_edge not in self.active_edges:
@@ -149,7 +172,7 @@ class advancing_front:
 
             # Fetch the node to expand to
             candidate_node = curr_edge.get_candidate_node()
-            nearest_neighbor = self.find_nearest_node(candidate_node)
+            nearest_neighbor = self.find_nearest_node(curr_edge, candidate_node)
             
             # Latch onto neighbor if within tolerance
             if (candidate_node - nearest_neighbor).get_magnitude() < self.tolerance:
@@ -160,7 +183,8 @@ class advancing_front:
             if not self.expand_mesh_with_node(curr_edge, candidate_node):
 
                 # Latch onto neighbor if current node fails
-                self.expand_mesh_with_node(curr_edge, nearest_neighbor)
+                if not self.expand_mesh_with_node(curr_edge, nearest_neighbor):
+                    print(f"Both Node and Neighbor failed, {curr_edge}, {candidate_node}, {nearest_neighbor}")
 
         print(f"Upper iteration limit achieved, edge_heap size: {len(self.edge_heap)}")
         

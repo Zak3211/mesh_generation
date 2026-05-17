@@ -67,7 +67,9 @@ class edge:
     
     def __lt__(self, other_edge):
         """Defines the < operator between two edges"""
-        return random.uniform(1, 1 + self.stochasticity)*self.get_length() < other_edge.get_length()
+        if random.choice([True, False]):
+            return True
+        return self.get_length() > other_edge.get_length()
 
     def __eq__(self, other_edge):
         """Overrides the == operator, orientation invarariant"""
@@ -89,6 +91,7 @@ class edge:
     """AI Generated Code Below"""
 
     def intersects(self, other_edge):
+    
         # Setup points as vectors
         p = vector(self.n1.x, self.n1.y)
         q = vector(other_edge.n1.x, other_edge.n1.y)
@@ -105,8 +108,11 @@ class edge:
             return False
 
         # Vector between the start points
-        q_minus_p = q - p
-
+        try:
+            q_minus_p = q - p
+        except ValueError as e:
+            return True
+        
         # Solve for t and u:
         # t: how far along edge1 the intersection is
         # u: how far along edge2 the intersection is
