@@ -3,7 +3,6 @@ from geometry_components.node import node
 from mesh import mesh
 from advancing_front import advancing_front
 
-
 constrained_edge_vertices = [
     (43.507506, 217.89751),
     (41.590752, 218.41315),
@@ -397,38 +396,40 @@ constrained_edge_vertices = [
     (44.34543899999998, 217.9932700000003),
 ]
 
+
 def construct_boundary(coords_list):
 
     node_list = []
     for x, y in coords_list:
         node_list.append(node(x, y))
-    
+
     edge_list = []
     for i in range(len(node_list)):
-        node1 = node_list[i-1]
+        node1 = node_list[i - 1]
         node2 = node_list[i]
 
         edge_list.append(edge(node1, node2))
-    
+
     return edge_list
+
 
 def main():
 
-    node_list = constrained_edge_vertices[::-1]
-    boundary_edges = construct_boundary(node_list)
-
-    boundary_edges = mesh.generate_square_boundary()
+    boundary_edges = construct_boundary(reversed(constrained_edge_vertices))
 
     animate = True
     save = False
 
     # 2. Initialize the Advancing Front
-    front = advancing_front(boundary_edges, tolerance=0.2, iterations=10000, is_animated=animate)
+    front = advancing_front(
+        boundary_edges, tolerance=0.2, iterations=10000, is_animated=animate
+    )
     front.expand_mesh()
-    
+
     # 4. Plot the result
     if not animate:
         front.mesh.plot(save=save, title="circle_mesh_ugly")
+
 
 if __name__ == "__main__":
     main()
