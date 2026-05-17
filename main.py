@@ -2,7 +2,6 @@ from geometry_components.edge import edge
 from geometry_components.node import node
 from mesh import mesh
 from advancing_front import advancing_front
-from edge_description import get_node_list
 
 
 constrained_edge_vertices = [

@@ -88,8 +88,8 @@ class advancing_front:
         return curr_node
 
     def bucketted_intersection_check(self, curr_edge):
-        #if curr_edge in self.mesh.edge_set:
-        #   return True
+        if curr_edge in self.mesh.edge_set:
+           return False
         for x, y in curr_edge.get_integer_buckets():
             for other_edge in self.int_coords_to_edges[x, y]:
                 if curr_edge.intersects(other_edge):
@@ -195,7 +195,10 @@ class advancing_front:
         
         if new_edge in self.active_edges:
             return self.active_edges.remove(new_edge)
-
+        if new_edge in self.mesh.edge_set:
+            print("here")
+            return 
+        
         self.active_edges.add(new_edge)
         self.edge_heap.add_edge(new_edge)
         self.mesh.add_edge(new_edge)
